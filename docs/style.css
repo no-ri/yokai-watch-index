@@ -39,6 +39,14 @@
 
 * { box-sizing: border-box; }
 
+/* hidden 属性を常に効かせる。
+ * .detail { display: flex } や .more { display: block } のような
+ * クラス側の display は、ブラウザ標準の [hidden] { display: none } より
+ * 詳細度が高いため、これがないと hidden を付けても要素が残る。
+ * .detail は画面全体を覆う z-index: 50 のオーバーレイなので、
+ * 残るとページ全体がタップを受け付けなくなる。 */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   background: var(--bg);
