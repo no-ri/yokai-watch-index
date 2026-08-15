@@ -101,3 +101,11 @@ YouTube API を使うスクリプトは `.env` の `YT_API_KEY` を読みます�
 
 第一弾は `noindex` と `robots.txt` の `Disallow: /` を設定しています。
 データの誤りや突合の失敗を家族で使いながら潰してから公開する方針です。
+
+### フロントエンドを直したとき
+
+`docs/index.html` と `docs/privacy.html` の `?v=` を必ず上げること。
+
+GitHub Pages は `Cache-Control: max-age=600` を返すため、
+ファイル名が同じだと修正が最大10分間ブラウザに届かない。
+実際に、全画面オーバーレイの修正が反映されず追跡に時間を使った。
