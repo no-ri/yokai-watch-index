@@ -296,3 +296,25 @@ class TestYouTube(unittest.TestCase):
             self.extract({"description": boilerplate + "\n【妖怪がいる！】\n短い"}),
             ("妖怪がいる！", False))
         self.assertEqual(self.extract({"description": boilerplate}), (None, False))
+
+
+class TestMatching(unittest.TestCase):
+    def test_longest_increasing_drops_out_of_order_anchors(self):
+        from match_segments import _longest_increasing
+
+        # 妖Tube の #N は放送順。単調性を破るアンカーは誤マッチ（SPEC.md §8.2）
+        pairs = [(0, 1), (1, 2), (2, 99), (3, 3), (4, 4)]
+        keep = _longest_increasing(pairs)
+        self.assertIn((3, 3), keep)
+        self.assertNotIn((2, 99), keep)
+
+    def test_recurring_needs_five_episodes(self):
+        from match_segments import mark_recurring
+
+        segs = [{"episode_id": f"MN{i:03d}", "title_ja_norm": "手を洗おう",
+                 "segment_id": f"MN{i:03d}-1"} for i in range(1, 7)]
+        segs += [{"episode_id": "MN001", "title_ja_norm": "本編タイトル",
+                  "segment_id": "MN001-2"}]
+        mark_recurring(segs)
+        self.assertTrue(segs[0]["is_recurring"])
+        self.assertFalse(segs[-1]["is_recurring"])
