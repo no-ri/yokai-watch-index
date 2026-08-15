@@ -175,6 +175,14 @@ def clean_value(value: str) -> str:
             break
         value = new
     value = _RE_BR.sub("\n", value)
+    # 残った未知のテンプレートは丸ごと落とす。
+    # 実データ例: "Ice Cream{{Gamelink|YW3}}" の {{Gamelink|...}}。
+    # 表示に出すと "Ice Cream{{Gamelink|YW3}}" のまま画面に出てしまう。
+    for _ in range(5):
+        new = re.sub(r"\{\{[^{}]*\}\}", "", value)
+        if new == value:
+            break
+        value = new
     value = strip_ruby(value)
     value = re.sub(r"\[\[([^\]|]+)\|([^\]]+)\]\]", r"\2", value)  # [[A|B]] -> B
     value = re.sub(r"\[\[([^\]]+)\]\]", r"\1", value)             # [[A]]   -> A
@@ -184,8 +192,13 @@ def clean_value(value: str) -> str:
 
 
 def split_multi(value: str) -> list[str]:
-    """<br> 区切りの値を分割する。空要素は落とす。"""
-    return [normalize_spaces(v) for v in value.split("\n") if normalize_spaces(v)]
+    """<br> 区切りの値を分割する。空要素と記号だけの残骸は落とす。"""
+    out = []
+    for part in value.split("\n"):
+        part = normalize_spaces(part).strip(",、;； ")
+        if part:
+            out.append(part)
+    return out
 
 
 # --- XML の読み込み（SPEC.md §5.13）-----------------------------------------
