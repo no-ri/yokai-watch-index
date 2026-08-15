@@ -34,3 +34,7 @@ __pycache__/
 venv/
 .pytest_cache/
 .mypy_cache/
+
+# --- 中間生成物 -------------------------------------------------------------
+# scripts/ が出力し、build_data.py が読む。公開物ではない。
+build/
