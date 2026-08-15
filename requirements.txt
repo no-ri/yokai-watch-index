@@ -1,0 +1,9 @@
+# 依存は標準ライブラリのみ（CLAUDE.md「Python」）。
+#
+# XML パース   : re + html（Special:Export の出力は構造が単純で、
+#                <text ... /> の自己閉じさえ扱えれば足りる）
+# CSV / JSON   : csv, json
+# HTTP         : urllib.request（YouTube Data API。PR4）
+# テスト       : unittest
+#
+# 追加する場合はここに記録し、理由をコミットメッセージに書くこと。
