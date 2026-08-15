@@ -318,3 +318,32 @@ class TestMatching(unittest.TestCase):
         mark_recurring(segs)
         self.assertTrue(segs[0]["is_recurring"])
         self.assertFalse(segs[-1]["is_recurring"])
+
+
+class TestForbiddenKeys(unittest.TestCase):
+    """SPEC.md §2.2 の実装装置。人間の注意力に頼らず機械で強制する。"""
+
+    def setUp(self):
+        from build_data import ForbiddenKeyError, assert_no_forbidden_keys
+
+        self.check = assert_no_forbidden_keys
+        self.error = ForbiddenKeyError
+
+    def test_clean_payload_passes(self):
+        self.check([{"yokai_id": "Jibanyan", "name_ja": "ジバニャン",
+                     "intro_ja": None}])
+
+    def test_each_forbidden_key_is_rejected(self):
+        for key in ("plot", "description", "etymology_raw",
+                    "personality_raw", "medallium_raw"):
+            with self.assertRaises(self.error, msg=key):
+                self.check([{"yokai_id": "Jibanyan", key: "原文"}])
+
+    def test_nested_and_case_insensitive(self):
+        with self.assertRaises(self.error):
+            self.check({"episodes": [{"segments": [{"Plot": "原文"}]}]})
+
+    def test_error_message_points_at_the_path(self):
+        with self.assertRaises(self.error) as ctx:
+            self.check({"a": [{"b": {"plot": "x"}}]})
+        self.assertIn("$.a[0].b", str(ctx.exception))
