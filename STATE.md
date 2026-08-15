@@ -14,15 +14,20 @@
 - [x] PR2 Fandom パーサと自己検証 — [#1](https://github.com/no-ri/yokai-watch-index/pull/1) merged
 - [x] PR3 欠番（ja.Wikipedia は第一弾では使わない — SPEC §6 / D-20260815-03）
 - [x] PR4 妖Tube 取得と A1 ゲート — [#2](https://github.com/no-ri/yokai-watch-index/pull/2) merged
+- [x] PR5 セグメントの突合 — [#3](https://github.com/no-ri/yokai-watch-index/pull/3) merged
+- [x] PR6 公開データ生成と禁止キー検査 — [#4](https://github.com/no-ri/yokai-watch-index/pull/4) merged
+- [x] PR7 フロントエンド — [#5](https://github.com/no-ri/yokai-watch-index/pull/5) merged
+- [x] GitHub Pages 公開 — https://no-ri.github.io/yokai-watch-index/
 
 ## 作業中
 
-- [ ] PR5 突合 — `feat/match-segments`
+なし。**第一弾は完成。**
 
-## 残り
+## 残り（人間の作業待ち。なくても動く）
 
-- [ ] PR6 データ生成（`facets.json` 含む）
-- [ ] PR7 フロントエンド ＋ GitHub Pages 公開
+- [ ] `overrides/movies.csv` の配置（劇場版8件。SPEC §5.15）
+- [ ] SPEC.md への差し戻し3件（下記「引っかかっている点」）
+- [ ] `reports/unmatched.csv` を見て `overrides/segment_youtube_map.csv` で手動補正
 
 ### 実行方法
 
@@ -31,7 +36,9 @@ python3 scripts/parse_fandom.py          # raw/fandom/*.xml -> build/fandom.json
 python3 scripts/fetch_youtube.py         # YouTube API -> build/youtube.json（37ユニット）
 python3 scripts/fetch_youtube.py --cached  # API を叩かず再計算
 python3 tools/spec_audit.py              # §15 の実測値を再現
-python3 -m unittest discover -s tests    # 27件
+python3 scripts/match_segments.py        # 突合
+python3 scripts/build_data.py            # docs/data/*.json を生成
+python3 -m unittest discover -s tests    # 38件
 ```
 
 ---
@@ -69,23 +76,37 @@ PR2 実行時点（2026-08-15）。
 | `unknown_presence.csv` | **3** | `original` / `human` / `program` のみ。畳めないもの |
 | `segment_title_mismatch.csv` | 2 | EP146（3対4）/ EP168（3対2） |
 | `youtube_noise.csv` | 953 | shorts 406 / まとめ 154 / 【公式】でない 393 |
-| `unmatched.csv` | 未計測 | PR5 で出力 |
+| `unmatched.csv` | 418 | うち定期ミニコーナー190。初代41 / ♪377 |
 
 **`segment_title_mismatch` は EP031 / EP063 を含まない。**
 着手前レビューで「この2件は `episode title` パラメータ自体が無い」と報告したのは、
 雑な正規表現による計測の誤りだった。実際は両方とも持っている。
 
+### 突合の結果（PR5）
+
+| シリーズ | 突合 | 内訳 |
+|---|---|---|
+| 初代 | 580 / 621 = **93.4%** | 完全一致297 / difflib210 / 位置補間73 |
+| ♪ | 188 / 565 = **33.3%** | 動画が190本しかないため上限33.6% |
+
+定期ミニコーナー（`is_recurring`）は3種類190セグメント。
+「発表！妖怪似顔絵記者会見」94 /「妖怪ニャハ体験」87 /「妖怪スイッチ！」9。
+
 ### A1 ゲート（SPEC §11.2）
 
-分母は `yotube_video_id` が非 null のセグメント。PR4 で測定（突合前の近似値）。
+分母は `yotube_video_id` が非 null のセグメント。
 
-| | 値 |
-|---|---|
-| 判定 | **不合格** |
-| 分母（初代＋♪の本編動画） | 811 |
-| `【...】` ブロックあり | 607 |
-| 充足率 | **74.8%**（合格基準 80%） |
-| 内訳 | 初代 420/621 = 67.6% / ♪ 187/190 = 98.4% |
+| | PR4 近似値 | **PR5 確定値** |
+|---|---|---|
+| 分母 | 811 | **768** |
+| `【...】` ブロックあり | 607 | **579** |
+| 充足率 | 74.8% | **75.4%** |
+| 判定 | 不合格 | **不合格**（基準80%） |
+
+内訳は初代 67.6% / ♪ 98.4%。初代の前半は説明欄が定型文だけの動画が多い。
+
+§11.2 のとおり不合格でも機能は残し、該当セグメントは「あらすじなし」表示。
+第一弾は Phase 3 を実施しないため `synopsis_ja` は元から null で実害はない。
 
 §11.2 のとおり不合格でも機能は残し、該当セグメントは「あらすじなし」表示。
 第一弾は Phase 3 を実施しないため `synopsis_ja` は元から null で実害はない。
@@ -116,6 +137,12 @@ PR2 実行時点（2026-08-15）。
 3. **§5.12 の「EP031 / EP063 は `episode title` パラメータ自体が無い」は誤り。**
    両方とも持っている。実際の個数不一致は EP146（3対4）と EP168（3対2）。
 
+4. **§15.2 の妖Tube の数値が古い。**
+   初代は「506本・#2〜621・欠番114」とあるが、実測では
+   **621本・#1〜#621・欠番0**。すでに全話が配信済みで、
+   Fandom 側の初代セグメント621と完全に一致する。
+   総動画数も 1,811 → 1,812。♪ は190本で一致（#186 のみ動画が2本）。
+
 ### 人間の作業待ち（なくても進行可能）
 
 - `overrides/movies.csv` — 劇場版8件の手入力（SPEC §5.15）。
@@ -130,7 +157,7 @@ PR2 実行時点（2026-08-15）。
 | | |
 |---|---|
 | GitHub | `no-ri/yokai-watch-index`（public） |
-| Pages | `main` ブランチの `/docs`。PR7 で有効化 |
+| Pages | **公開中** https://no-ri.github.io/yokai-watch-index/ （`main` の `/docs`） |
 | `gh` | 2.97.0（`~/.local/bin/gh`）。認証済み |
 | Python | 3.9.6（システム標準）。依存は標準ライブラリのみ |
 | `.env` | リポジトリ直下。`YT_API_KEY` を格納。gitignore 済み |
