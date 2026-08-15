@@ -1,0 +1,15 @@
+{
+  "name": "妖怪さくいん（非公式ファンサイト）",
+  "short_name": "妖怪さくいん",
+  "description": "妖怪ウォッチのアニメと妖怪を相互に探せる非公式ファンサイトです。",
+  "lang": "ja",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f5f1",
+  "theme_color": "#3b4a6b",
+  "icons": [
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}

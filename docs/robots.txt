@@ -1,0 +1,7 @@
+# 第一弾は検索エンジンに出さない（SPEC.md §12.3）。
+# 権利面の要請ではなく品質上の判断。データの誤りや突合の失敗を
+# 家族で使いながら潰してから開ける。
+# 開放するときはこのファイルを消し、index.html の
+# <meta name="robots" content="noindex, nofollow"> を外す。
+User-agent: *
+Disallow: /
