@@ -1,0 +1,57 @@
+# データソースの記録（SPEC.md §3.2）
+#
+# 取得コードを書く前に必ず更新すること。
+# 規約は変わるため「いつ時点の判断か」を残す。
+
+- id: fandom
+  name: Yo-kai Watch Wiki
+  url: https://yokaiwatch.fandom.com/
+  license: CC BY-SA (text only; images excluded)
+  license_url: https://www.fandom.com/licensing
+  tos_url: https://www.fandom.com/terms-of-use
+  access_method: manual Special:Export (automated access prohibited by ToS)
+  robots_txt: "Special:* disallowed"
+  reviewed_at: 2026-08-15
+  used_for: [yokai, characters, episodes, segments, redirects]
+  notes: |
+    ToS prohibits robots/scrapers without written permission.
+    ToS also prohibits use of content for ML/AI development without consent.
+    Images are NOT covered by CC BY-SA. Never use them.
+    Local files under raw/fandom/ are placed by a human; scripts only read them.
+    See SPEC.md §2.3.
+
+- id: yotube
+  name: 妖怪ウォッチ公式YouTubeチャンネル「妖Tube」
+  url: https://www.youtube.com/channel/UCvudj1z5SLEkOw-Jiu63IYg
+  channel_id: UCvudj1z5SLEkOw-Jiu63IYg
+  uploads_playlist_id: UUvudj1z5SLEkOw-Jiu63IYg
+  operator: 株式会社 indi
+  license: YouTube Terms of Service / Developer Policies
+  tos_url: https://developers.google.com/youtube/terms/developer-policies
+  access_method: YouTube Data API v3 (playlistItems.list + videos.list only)
+  reviewed_at: 2026-08-15
+  used_for: [segment video links]
+  notes: |
+    search.list must NOT be used (100 units/call). See SPEC.md §3.3.
+    Only video_id and self-authored labels may be persisted.
+    title / description / publishedAt / duration are transient. See SPEC.md §2.4.
+    API key lives in .env (gitignored) and never in docs/.
+
+# --- 第一弾では使用しないソース ---------------------------------------------
+
+- id: jawiki
+  name: ウィキペディア日本語版
+  url: https://ja.wikipedia.org/
+  license: CC BY-SA 4.0
+  access_method: MediaWiki API (automated access permitted; UA must carry contact)
+  reviewed_at: 2026-08-15
+  used_for: []
+  status: not_used_in_v1
+  notes: |
+    第一弾では使用しない（SPEC.md §6）。
+    air_date と staff は Fandom の {{episode}} から 100% 取得できることが実測で判明した。
+    title_ja_full のみが未取得だが、§9.2 の検索軸に含まれないため常に null とする。
+
+# --- 取得を禁止しているソース（SPEC.md §2.5）--------------------------------
+# テレビ東京公式サイト / Game8 / 神ゲー攻略 / 攻略大百科 / gamepedia.jp /
+# ピクシブ百科事典 / YouTube のウェブページ（API のみ使用）
