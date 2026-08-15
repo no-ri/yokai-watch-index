@@ -18,6 +18,8 @@
 - [x] PR6 公開データ生成と禁止キー検査 — [#4](https://github.com/no-ri/yokai-watch-index/pull/4) merged
 - [x] PR7 フロントエンド — [#5](https://github.com/no-ri/yokai-watch-index/pull/5) merged
 - [x] GitHub Pages 公開 — https://no-ri.github.io/yokai-watch-index/
+- [x] 修正 [#6](https://github.com/no-ri/yokai-watch-index/pull/6) 全画面オーバーレイがタップを飲み込んでいた
+- [x] 修正 [#7](https://github.com/no-ri/yokai-watch-index/pull/7) CSS/JS のキャッシュ破棄
 
 ## 作業中
 
@@ -111,6 +113,35 @@ PR2 実行時点（2026-08-15）。
 §11.2 のとおり不合格でも機能は残し、該当セグメントは「あらすじなし」表示。
 第一弾は Phase 3 を実施しないため `synopsis_ja` は元から null で実害はない。
 突合後の確定値は PR5 で再計算する。
+
+---
+
+## 踏んだバグ（再発防止のため残す）
+
+### 1. `hidden` 属性が効かず、全画面オーバーレイがタップを飲み込んでいた（#6）
+
+`.detail { display: flex }` がブラウザ標準の `[hidden] { display: none }` を
+詳細度で上回り、`hidden` を付けても要素が残っていた。
+`.detail` は `position: fixed / inset: 0 / z-index: 50` なので、
+**ページ全体がタップを受け付けない状態で公開された。**
+
+対処: `[hidden] { display: none !important; }` を追加。
+
+**見落とした理由**: 動作確認を JavaScript の `.click()` だけで行っていた。
+プログラムからのクリックは要素を直接叩くため、上に何が乗っていても成功する。
+
+**今後の検証方法**: 操作要素の中心座標で `document.elementFromPoint` を引き、
+その要素自身が返るかを見る。上に何か乗っていれば別の要素が返るので検出できる。
+
+### 2. GitHub Pages のキャッシュで修正が届かない（#7）
+
+`Cache-Control: max-age=600` が返るため、ファイル名が同じだと修正が
+最大10分間ブラウザに届かない。#6 をデプロイした後も古い CSS が使われていた。
+
+対処: `style.css?v=` / `app.js?v=` を付けた。
+**フロントを直すときはこの値を必ず上げること。**
+なお `index.html` 自体もキャッシュされるため、`?v=` を上げた直後の
+1回だけは利用者側の再読み込みが必要になる。
 
 ---
 
