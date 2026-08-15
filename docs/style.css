@@ -336,12 +336,21 @@ select, .toolbar select {
   background: var(--surface);
   width: 100%;
   max-width: 720px;
-  max-height: 88vh;
+  /* iOS Safari の vh はツールバーを含む「大きい方のビューポート」を指すため、
+   * 88vh だと箱が実際の表示領域より高くなり、上端に貼り付けた閉じるボタンが
+   * 画面の上に隠れる。親（.detail）が inset:0 の fixed で表示領域そのものなので、
+   * % で取れば環境に依存しない。dvh は対応ブラウザ向けの上書き。 */
+  max-height: 88%;
   overflow: auto;
+  overscroll-behavior: contain;
   border-radius: 16px 16px 0 0;
   padding: 0 16px calc(16px + env(safe-area-inset-bottom));
   position: relative;
 }
+@supports (max-height: 88dvh) {
+  .detail-inner { max-height: 88dvh; }
+}
+
 @media (min-width: 620px) {
   .detail { align-items: center; }
   .detail-inner { border-radius: 16px; }
