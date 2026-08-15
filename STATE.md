@@ -12,15 +12,15 @@
 - [x] 着手前レビュー（`files/SPEC_ISSUES.md`）→ SPEC.md 版2.1 に反映済み
 - [x] PR1 リポジトリの足場 — `654526e`（main へ直接。リポジトリ作成時のブートストラップ）
 - [x] PR2 Fandom パーサと自己検証 — [#1](https://github.com/no-ri/yokai-watch-index/pull/1) merged
+- [x] PR3 欠番（ja.Wikipedia は第一弾では使わない — SPEC §6 / D-20260815-03）
+- [x] PR4 妖Tube 取得と A1 ゲート — [#2](https://github.com/no-ri/yokai-watch-index/pull/2) merged
 
 ## 作業中
 
-- [ ] PR4 妖Tube 取得 ＋ A1 ゲートの測定 — `feat/fetch-youtube`
+- [ ] PR5 突合 — `feat/match-segments`
 
 ## 残り
 
-- [x] PR3 欠番（ja.Wikipedia は第一弾では使わない — SPEC §6 / D-20260815-03）
-- [ ] PR5 突合
 - [ ] PR6 データ生成（`facets.json` 含む）
 - [ ] PR7 フロントエンド ＋ GitHub Pages 公開
 
@@ -28,6 +28,8 @@
 
 ```bash
 python3 scripts/parse_fandom.py          # raw/fandom/*.xml -> build/fandom.json
+python3 scripts/fetch_youtube.py         # YouTube API -> build/youtube.json（37ユニット）
+python3 scripts/fetch_youtube.py --cached  # API を叩かず再計算
 python3 tools/spec_audit.py              # §15 の実測値を再現
 python3 -m unittest discover -s tests    # 27件
 ```
@@ -51,7 +53,9 @@ python3 -m unittest discover -s tests    # 27件
 | infobox パラメータ | 140 種類 | 一致 |
 | セグメント（lead） | 1,186（EP 621 / MN 565） | §15.6 に反映済み |
 | presence 注記 | 65 種類 | §15.6 に反映済み |
-| 妖Tube 総動画数 | 1,811（API 実測） | 一致 |
+| 妖Tube 総動画数 | **1,812** | §15.2 は 1,811 |
+| 妖Tube 初代 | **621本 #1〜#621 欠番0** | **§15.2 は 506本・欠番114。すでに埋まっていた** |
+| 妖Tube ♪ | 190本 #1〜#190 欠番0 | 一致（#186 のみ動画2本） |
 
 ### レポート件数（`reports/` は gitignore のためここに記録）
 
@@ -64,6 +68,7 @@ PR2 実行時点（2026-08-15）。
 | `unresolved_yokai.csv` | 93 | 46 種類のリンク。赤リンクとアニメオンリー妖怪 |
 | `unknown_presence.csv` | **3** | `original` / `human` / `program` のみ。畳めないもの |
 | `segment_title_mismatch.csv` | 2 | EP146（3対4）/ EP168（3対2） |
+| `youtube_noise.csv` | 953 | shorts 406 / まとめ 154 / 【公式】でない 393 |
 | `unmatched.csv` | 未計測 | PR5 で出力 |
 
 **`segment_title_mismatch` は EP031 / EP063 を含まない。**
@@ -72,13 +77,19 @@ PR2 実行時点（2026-08-15）。
 
 ### A1 ゲート（SPEC §11.2）
 
-分母は `yotube_video_id` が非 null のセグメント。**PR4 で測定する。**
+分母は `yotube_video_id` が非 null のセグメント。PR4 で測定（突合前の近似値）。
 
 | | 値 |
 |---|---|
-| 判定 | 未測定 |
-| 分母 | — |
-| `【...】` ブロックあり | — |
+| 判定 | **不合格** |
+| 分母（初代＋♪の本編動画） | 811 |
+| `【...】` ブロックあり | 607 |
+| 充足率 | **74.8%**（合格基準 80%） |
+| 内訳 | 初代 420/621 = 67.6% / ♪ 187/190 = 98.4% |
+
+§11.2 のとおり不合格でも機能は残し、該当セグメントは「あらすじなし」表示。
+第一弾は Phase 3 を実施しないため `synopsis_ja` は元から null で実害はない。
+突合後の確定値は PR5 で再計算する。
 
 ---
 
