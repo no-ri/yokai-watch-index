@@ -244,3 +244,55 @@ class TestEpisode(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestYouTube(unittest.TestCase):
+    """妖Tube のタイトル・説明欄の解釈（SPEC.md §7）。"""
+
+    def setUp(self):
+        from fetch_youtube import classify, extract_synopsis_key, parse_series_no
+
+        self.classify = classify
+        self.parse_series_no = parse_series_no
+        self.extract = extract_synopsis_key
+
+    def test_uta_is_checked_before_gen1(self):
+        # "妖怪ウォッチ♪ #1" は "妖怪ウォッチ #..." にも部分一致する。
+        # 判定順を逆にすると♪が全部初代に落ちる。
+        self.assertEqual(self.parse_series_no("【公式】妖怪ウォッチ♪ #12 なんとか"),
+                         ("uta", 12))
+        self.assertEqual(self.parse_series_no("【公式】妖怪ウォッチ#1「妖怪がいる！」"),
+                         ("gen1", 1))
+
+    def test_fullwidth_hash_is_accepted(self):
+        # ＃ と # の両方が使われる（SPEC.md §7.4）
+        self.assertEqual(self.parse_series_no("【公式】妖怪ウォッチ＃300 なんとか"),
+                         ("gen1", 300))
+
+    def test_other_series_are_not_numbered(self):
+        # 『妖怪ウォッチ！』は "ウォッチ" の直後が "！" なので初代に混ざらない
+        self.assertEqual(self.parse_series_no("【公式】妖怪ウォッチ！ #8 なんとか"),
+                         (None, None))
+
+    def test_noise_filters(self):
+        def item(title, desc=""):
+            return {"title": title, "description": desc}
+
+        self.assertEqual(self.classify(item("【公式】妖怪ウォッチ#1 x"))[0], None)
+        self.assertEqual(self.classify(item("【公式】x #shorts"))[0], "shorts")
+        self.assertEqual(self.classify(item("【公式】x", "y #Shorts"))[0], "shorts")
+        self.assertEqual(self.classify(item("【公式】神回まとめ"))[0], "matome")
+        self.assertEqual(self.classify(item("妖怪ウォッチ#1"))[0], "not_official")
+
+    def test_synopsis_needs_a_body_not_just_a_bracket(self):
+        # 説明欄の先頭は定型文（約330文字）。文字数では判定できない（SPEC.md §7.3）
+        boilerplate = "アニメ過去シリーズから毎週配信中！\n" + "x" * 300
+        self.assertEqual(
+            self.extract({"description": boilerplate + "\n【妖怪がいる！】\n"
+                          + "あ" * 80}),
+            ("妖怪がいる！", True))
+        # 【...】 だけで本文がない場合は has_synopsis = False
+        self.assertEqual(
+            self.extract({"description": boilerplate + "\n【妖怪がいる！】\n短い"}),
+            ("妖怪がいる！", False))
+        self.assertEqual(self.extract({"description": boilerplate}), (None, False))
