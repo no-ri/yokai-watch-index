@@ -339,25 +339,39 @@ select, .toolbar select {
   max-height: 88vh;
   overflow: auto;
   border-radius: 16px 16px 0 0;
-  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  padding: 0 16px calc(16px + env(safe-area-inset-bottom));
   position: relative;
 }
 @media (min-width: 620px) {
   .detail { align-items: center; }
   .detail-inner { border-radius: 16px; }
 }
+/* 閉じるボタンは sticky なバーに置く。
+ * .detail-inner はスクロールする箱なので、position: absolute だと
+ * 中身と一緒に流れて画面外に出てしまう。登場回数の多い妖怪
+ * （メラメライオン＝100回など）は中身が長く、少し送っただけで押せなくなる。
+ * バーを不透明にして、中身がその下を通るようにする。 */
+.detail-bar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  margin: 0 -16px;
+  padding: 6px 12px 6px 0;
+  background: var(--surface);
+  display: flex;
+  justify-content: flex-end;
+}
 .close {
-  position: absolute;
-  top: 8px; right: 8px;
   width: var(--tap); height: var(--tap);
   border: none;
   background: var(--bg);
   border-radius: 50%;
   font-size: 22px;
+  line-height: 1;
   color: var(--ink);
   cursor: pointer;
 }
-.detail h2 { margin: 0 6px 2px 0; font-size: 20px; padding-right: 44px; }
+.detail h2 { margin: 0 0 2px; font-size: 20px; }
 .detail dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 10px 0; }
 .detail dt { color: var(--ink-soft); font-size: 13px; }
 .detail dd { margin: 0; font-size: 15px; }
