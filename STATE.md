@@ -10,19 +10,27 @@
 ## 完了
 
 - [x] 着手前レビュー（`files/SPEC_ISSUES.md`）→ SPEC.md 版2.1 に反映済み
-- [x] PR1 リポジトリの足場 — `feat/scaffold`
+- [x] PR1 リポジトリの足場 — `654526e`（main へ直接。リポジトリ作成時のブートストラップ）
+- [x] PR2 Fandom パーサと自己検証 — [#1](https://github.com/no-ri/yokai-watch-index/pull/1) merged
 
 ## 作業中
 
-- [ ] PR2 Fandom パーサ — `feat/parse-fandom`
+- [ ] PR4 妖Tube 取得 ＋ A1 ゲートの測定 — `feat/fetch-youtube`
 
 ## 残り
 
-- [ ] PR3 欠番（ja.Wikipedia は第一弾では使わない — SPEC §6）
-- [ ] PR4 妖Tube 取得 ＋ A1 ゲートの測定
+- [x] PR3 欠番（ja.Wikipedia は第一弾では使わない — SPEC §6 / D-20260815-03）
 - [ ] PR5 突合
 - [ ] PR6 データ生成（`facets.json` 含む）
 - [ ] PR7 フロントエンド ＋ GitHub Pages 公開
+
+### 実行方法
+
+```bash
+python3 scripts/parse_fandom.py          # raw/fandom/*.xml -> build/fandom.json
+python3 tools/spec_audit.py              # §15 の実測値を再現
+python3 -m unittest discover -s tests    # 27件
+```
 
 ---
 
@@ -47,14 +55,20 @@
 
 ### レポート件数（`reports/` は gitignore のためここに記録）
 
-| ファイル | 件数 | 取得日 |
+PR2 実行時点（2026-08-15）。
+
+| ファイル | 件数 | 内容 |
 |---|---|---|
-| `unknown_params.csv` | 未計測 | — |
-| `conflicts.csv` | 未計測 | — |
-| `unresolved_yokai.csv` | 未計測 | — |
-| `unknown_presence.csv` | 未計測 | — |
-| `segment_title_mismatch.csv` | 未計測（想定3件） | — |
-| `unmatched.csv` | 未計測 | — |
+| `unknown_params.csv` | 106 | 名前で集約。大半はゲームのステータス（§1.3 でスコープ外） |
+| `conflicts.csv` | 268 | rank 243 / attribute 25。複数ゲームでランクが違うため |
+| `unresolved_yokai.csv` | 93 | 46 種類のリンク。赤リンクとアニメオンリー妖怪 |
+| `unknown_presence.csv` | **3** | `original` / `human` / `program` のみ。畳めないもの |
+| `segment_title_mismatch.csv` | 2 | EP146（3対4）/ EP168（3対2） |
+| `unmatched.csv` | 未計測 | PR5 で出力 |
+
+**`segment_title_mismatch` は EP031 / EP063 を含まない。**
+着手前レビューで「この2件は `episode title` パラメータ自体が無い」と報告したのは、
+雑な正規表現による計測の誤りだった。実際は両方とも持っている。
 
 ### A1 ゲート（SPEC §11.2）
 
@@ -72,11 +86,24 @@
 
 ### SPEC.md への差し戻し依頼（実装は先行して進める）
 
-- **§15.1 の「人間キャラ 160」は 154 が正しい。**
-  160 は着手前レビューでの計測誤り。排他分類では154で、内訳の合計も
-  4,364（`titles.txt` の行数）と一致する。詳細は D-20260815-01。
-  §15.1 の「人間キャラの日本語名 145 / 154 = 94.2%」の行は154前提のままなので、
-  戻せば整合する。あわせて「パーサが認識した4,330件ベース」も古い表現。
+いずれも `tools/spec_audit.py` で再現できる。
+
+1. **§15.1 の「人間キャラ 160」は 154 が正しい。**
+   160 は着手前レビューでの計測誤り。排他分類（妖怪優先）では154で、
+   内訳の合計も 4,364（`titles.txt` の行数）と一致する。D-20260815-01。
+   `{{yo-kai}}` と `{{character}}` を両方持つページが6件あるのが差の理由。
+   §15.1 の「人間キャラの日本語名 145 / 154 = 94.2%」の行は154前提のままなので、
+   戻せば整合する。「パーサが認識した4,330件ベース」も古い表現。
+
+2. **§5.11 / §15.1 の prefix 内訳は `{{episode/nav}}` の値を拾った数値。**
+   `{{episode}}` 本体のみで数えると
+   `(none) 318 / MN 64 / YG 9 / EX 19 / SS 49`。
+   **Y学園の infobox 側の値は `YSH` ではなく `YG`。**
+   本体に `prefix` を持たない MN 話が実在するため（MN090 等）、
+   §5.11 をそのまま実装すると♪が32話落ちる。D-20260815-06（**要確認**）。
+
+3. **§5.12 の「EP031 / EP063 は `episode title` パラメータ自体が無い」は誤り。**
+   両方とも持っている。実際の個数不一致は EP146（3対4）と EP168（3対2）。
 
 ### 人間の作業待ち（なくても進行可能）
 
