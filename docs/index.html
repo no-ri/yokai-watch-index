@@ -13,7 +13,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="妖怪さくいん">
-<link rel="stylesheet" href="style.css?v=20260815b">
+<link rel="stylesheet" href="style.css?v=20260815c">
 </head>
 <body>
 
@@ -151,7 +151,11 @@
 <!-- 詳細ダイアログ -->
 <div id="detail" class="detail" hidden role="dialog" aria-modal="true" aria-labelledby="detail-title">
   <div class="detail-inner">
-    <button type="button" class="close" id="detail-close" aria-label="閉じる">×</button>
+    <!-- 閉じるボタンは sticky なバーに置く。中身が長いとき（登場100回の妖怪など）に
+         スクロールで流れていかないようにするため。 -->
+    <div class="detail-bar">
+      <button type="button" class="close" id="detail-close" aria-label="閉じる">×</button>
+    </div>
     <div id="detail-body"></div>
   </div>
 </div>
@@ -175,6 +179,6 @@
      <a href="https://github.com/no-ri/yokai-watch-index" rel="noopener noreferrer" target="_blank">ソースコード</a>（MIT）</p>
 </footer>
 
-<script src="app.js?v=20260815b"></script>
+<script src="app.js?v=20260815c"></script>
 </body>
 </html>
